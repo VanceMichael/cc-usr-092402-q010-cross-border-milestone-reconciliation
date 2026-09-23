@@ -1,12 +1,70 @@
 {
-  "schema_version": "1",
-  "required_fields": [
-    "cooperation_ref",
-    "side",
-    "milestone_code",
-    "evidence_digest",
-    "confirmed_by"
-  ],
-  "time_format": "ISO-8601 with offset",
-  "digest_format": "sha256:<hex>"
+  "schema_version": "2",
+  "rule_versions": ["rules-1.0.0"],
+  "common": {
+    "time_format": "ISO-8601 with offset",
+    "local_date_format": "YYYY-MM-DD",
+    "digest_format": "sha256:<hex>",
+    "sides": ["A", "B"],
+    "identity_headers": ["x-actor-ref", "x-actor-side", "x-actor-role"],
+    "error_envelope": { "error": "string", "message": "string", "details": "object|null" }
+  },
+  "fact_tables": {
+    "party_versions": ["id", "side", "seq", "party_name", "iana_timezone", "weekend_days", "recorded_at", "recorded_by"],
+    "calendar_days": ["id", "side", "local_date", "kind=holiday|workday", "label", "recorded_at", "recorded_by"],
+    "milestone_versions": ["id", "cooperation_ref", "side", "milestone_code", "seq", "title", "local_due_date", "dependencies[]=A:CODE", "required_role", "holiday_policy=as_is|next_workday", "recorded_at", "recorded_by"],
+    "deliverable_versions": ["id", "cooperation_ref", "side", "milestone_code", "version", "items[]{item_code,title}", "recorded_at", "recorded_by"],
+    "receipts": ["id", "cooperation_ref", "side", "milestone_code", "item_code|null=whole_package", "digest", "source_ref", "signed_at", "received_at", "status=accepted|duplicate", "duplicate_of", "recorded_at", "recorded_by"],
+    "confirmations": ["id", "cooperation_ref", "side", "milestone_code", "role", "actor_ref", "decision=confirmed|rejected", "note", "recorded_at"]
+  },
+  "event_streams": {
+    "cross_mapping_events": {
+      "actions": ["propose", "confirm", "reject"],
+      "fields": ["id", "cooperation_ref", "node_code", "action", "side_a_code", "side_b_code", "amount_cents", "governing_side=A|B", "actor_side", "event_at", "recorded_at"],
+      "rule": "只有非提议方可 confirm/reject；confirmed 才形成结算节点"
+    },
+    "split_events": {
+      "actions": ["propose", "confirm", "reject"],
+      "fields": ["id", "cooperation_ref", "parent_node", "child_node", "weight(1..10000 basis points)", "side_a_code", "side_b_code", "action", "actor_side", "event_at", "recorded_at"],
+      "rule": "确认后已确认权重不得超过 10000；激活条件=无 proposed 且 confirmed 权重恰为 10000"
+    },
+    "objection_events": {
+      "actions": ["open", "withdraw"],
+      "fields": ["id", "cooperation_ref", "node_code", "action", "open_objection_id", "side", "reason_digest", "detail_ref", "event_at", "recorded_by", "recorded_at"],
+      "rule": "open 未撤回期间冻结本节点金额，不影响无关节点"
+    }
+  },
+  "conclusions": {
+    "statuses": ["payable", "not_payable", "blocked", "frozen", "superseded"],
+    "reason_codes": [
+      "ok",
+      "mapping_not_confirmed",
+      "milestone_version_missing",
+      "calendar_missing",
+      "missing_deliverable_list",
+      "partial_delivery",
+      "duplicate_receipt_ignored",
+      "extraneous_receipt_ignored",
+      "whole_package_receipt_ignored",
+      "role_not_confirmed",
+      "role_rejected",
+      "dependency_unmet",
+      "dependency_cycle",
+      "unknown_dependency",
+      "superseded_by_split",
+      "split_negotiation_open",
+      "split_weight_mismatch",
+      "objection_open",
+      "late_under_governing_calendar",
+      "calendar_views_differ",
+      "holiday_adjusted"
+    ],
+    "payment_conclusions": ["id", "batch_id", "node_code", "recompute_seq", "status", "amount_cents", "reasons[]", "evidence_snapshot{}", "evidence_as_of", "rule_version", "computed_at"],
+    "reversals": ["id", "original_conclusion_id", "batch_id", "node_code", "reason", "recorded_by", "recorded_at"],
+    "replacement_conclusions": ["id", "reversal_id", "batch_id", "node_code", "status", "amount_cents", "reasons[]", "evidence_snapshot{}", "evidence_as_of", "rule_version", "computed_at"],
+    "replay_runs": ["id", "batch_id", "evidence_as_of", "rule_version", "request_actor", "conclusions", "late_evidence", "matches_original", "ran_at"]
+  },
+  "required_fields_legacy_note": "v1 的 cooperation_ref/side/milestone_code/evidence_digest/confirmed_by 分别由各表 cooperation_ref、side、receipts.digest 与 confirmations.actor_ref 承接",
+  "time_format_legacy": "ISO-8601 with offset",
+  "digest_format_legacy": "sha256:<hex>"
 }

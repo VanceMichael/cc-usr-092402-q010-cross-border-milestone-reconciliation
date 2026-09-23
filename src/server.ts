@@ -1,16 +1,20 @@
 
-import http, { IncomingMessage, ServerResponse } from "node:http";
+import path from "node:path";
+import http from "node:http";
+import { openDatabase } from "./db.js";
+import { Store } from "./store.js";
+import { createRouter } from "./http.js";
 
-export function createServer(): http.Server {
-  return http.createServer((request: IncomingMessage, response: ServerResponse) => {
-    if (request.method === "GET" && request.url === "/health") {
-      response.writeHead(200, { "content-type": "application/json" });
-      response.end(JSON.stringify({ status: "ok" }));
-      return;
-    }
-    response.writeHead(404, { "content-type": "application/json" });
-    response.end(JSON.stringify({ error: "not_found" }));
-  });
+export interface ServerOptions {
+  databasePath?: string;
+  clock?: () => number;
+}
+
+export function createServer(options: ServerOptions = {}): http.Server {
+  const databasePath = options.databasePath ?? process.env.DATABASE_PATH ?? path.join(process.cwd(), "data", "app.sqlite3");
+  const db = openDatabase(databasePath);
+  const store = new Store(db, { clock: options.clock });
+  return http.createServer(createRouter(store));
 }
 
 if (process.argv[1]?.endsWith("/server.js")) {

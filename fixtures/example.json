@@ -1,5 +1,72 @@
 {
-  "cooperation_ref": "COOP-DEMO",
-  "side": "A",
-  "milestone_code": "M1"
+  "cooperation": {
+    "ref": "COOP-DEMO",
+    "name": "示例跨境交付合作",
+    "currency": "CNY"
+  },
+  "parties": [
+    { "side": "A", "party_name": "境内团队（引用编号）", "iana_timezone": "Asia/Shanghai", "weekend_days": [0, 6] },
+    { "side": "B", "party_name": "境外伙伴（引用编号）", "iana_timezone": "Europe/Berlin", "weekend_days": [0, 6] }
+  ],
+  "calendar_days": [
+    { "side": "A", "local_date": "2026-09-25", "kind": "holiday", "label": "示例调休假日" },
+    { "side": "A", "local_date": "2026-09-27", "kind": "workday", "label": "示例补班日" }
+  ],
+  "milestones": [
+    {
+      "side": "A",
+      "milestone_code": "M1",
+      "title": "首批交付（境内验收口径）",
+      "local_due_date": "2026-09-25",
+      "dependencies": [],
+      "required_role": "approver",
+      "holiday_policy": "next_workday"
+    },
+    {
+      "side": "B",
+      "milestone_code": "X1",
+      "title": "First delivery (local sign-off)",
+      "local_due_date": "2026-09-25",
+      "dependencies": ["A:M1"],
+      "required_role": "approver",
+      "holiday_policy": "next_workday"
+    }
+  ],
+  "deliverables": [
+    {
+      "side": "A",
+      "milestone_code": "M1",
+      "items": [
+        { "item_code": "D1", "title": "技术文档" },
+        { "item_code": "D2", "title": "验收报告" }
+      ]
+    }
+  ],
+  "receipts": [
+    {
+      "side": "A",
+      "milestone_code": "M1",
+      "item_code": "D1",
+      "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000001",
+      "source_ref": "courier-A-D1-0001",
+      "signed_at": "2026-09-24T16:30:00+08:00",
+      "note": "第二张同摘要登记将被标记为 duplicate 并指向首张回执"
+    }
+  ],
+  "cross_mapping": {
+    "node_code": "N1",
+    "side_a_code": "M1",
+    "side_b_code": "X1",
+    "amount_cents": 100000,
+    "governing_side": "A",
+    "lifecycle": ["A propose", "B confirm"],
+    "note": "跨方映射必须双方共同确认后才形成结算节点"
+  },
+  "objection_example": {
+    "node_code": "N1",
+    "side": "B",
+    "reason_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000002",
+    "detail_ref": "objection-N1-0001",
+    "effect": "open 期间 N1 金额冻结，无关节点照常结算；撤回后重算恢复"
+  }
 }
