@@ -1,0 +1,16 @@
+{
+  "name": "cross-border-milestone",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "migrate": "node scripts/migrate.js",
+    "test": "npm run build && node --test dist/server.test.js"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.3",
+    "typescript": "5.8.3"
+  }
+}

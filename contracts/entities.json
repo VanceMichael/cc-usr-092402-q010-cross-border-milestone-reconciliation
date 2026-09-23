@@ -1,0 +1,12 @@
+{
+  "schema_version": "1",
+  "required_fields": [
+    "cooperation_ref",
+    "side",
+    "milestone_code",
+    "evidence_digest",
+    "confirmed_by"
+  ],
+  "time_format": "ISO-8601 with offset",
+  "digest_format": "sha256:<hex>"
+}
