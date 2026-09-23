@@ -1,5 +1,6 @@
 {
-  "schema_version": "1",
+  "schema_version": "2",
+  "rule_version": "v1",
   "required_fields": [
     "cooperation_ref",
     "side",
@@ -8,5 +9,102 @@
     "confirmed_by"
   ],
   "time_format": "ISO-8601 with offset",
-  "digest_format": "sha256:<hex>"
+  "date_format": "YYYY-MM-DD",
+  "digest_format": "sha256:<hex>",
+  "identity": {
+    "headers": {
+      "x-actor-party": "已登记的参与方编号（parties.party_code）",
+      "x-actor-role": "lead | project_owner | 双方约定的其他角色"
+    },
+    "role_confirm_format": "<party_code>:<role>，例如 HOME:lead"
+  },
+  "entities": {
+    "party": {
+      "required": ["party_code", "side", "display_name"],
+      "side_enum": ["A", "B"]
+    },
+    "cooperation": {
+      "required": ["cooperation_ref", "home_party", "partner_party"],
+      "optional": ["currency"]
+    },
+    "calendar": {
+      "required": ["calendar_code", "iana_timezone", "valid_from_date"],
+      "optional": ["party_code", "work_mon..work_sun", "valid_to_date"],
+      "workday_fields": "work_mon/work_tue/work_wed/work_thu/work_fri/work_sat/work_sun ∈ {0,1}"
+    },
+    "calendar_holiday": {
+      "required": ["holiday_date", "name"],
+      "optional": ["workday_override"],
+      "note": "workday_override=1 表示调休上班日"
+    },
+    "milestone_version": {
+      "required": ["milestone_code", "title", "planned_date", "amount", "calendar_id"],
+      "optional": ["required_roles", "weight"],
+      "append_only": true,
+      "version_kind_enum": ["initial", "revision", "split"]
+    },
+    "milestone_mapping": {
+      "required": ["side_a_version_id", "side_b_version_id"],
+      "optional": ["relation", "note"],
+      "relation_enum": ["equivalent", "split"],
+      "activation": "双方各确认一次（mapping_confirmations 两条不同 party_code）"
+    },
+    "milestone_dependency": {
+      "required": ["version_id", "depends_on_version_id"],
+      "kind": "finish_to_start",
+      "constraints": ["禁止自依赖", "禁止环路"]
+    },
+    "delivery_item": {
+      "required": ["item_code", "title"],
+      "optional": ["required_qty"]
+    },
+    "delivery_event": {
+      "required": ["item_code", "evidence_digest", "delivered_at"],
+      "optional": ["qty", "local_ref", "duplicate_of_event_id"],
+      "idempotency_key": ["item_id", "evidence_digest"]
+    },
+    "receipt": {
+      "required": ["receipt_no", "evidence_digest", "signed_at"],
+      "optional": ["local_ref", "receiving_party", "duplicate_of_receipt_id"],
+      "idempotency_key": ["version_id", "receipt_no"]
+    },
+    "fact_correction": {
+      "required": ["fact_table", "fact_id", "kind"],
+      "kind_enum": ["withdraw"],
+      "ownership": "只能由事实归属方发起"
+    },
+    "dispute": {
+      "required": ["reason", "raised_at"],
+      "one_of_subject": ["subject_version_id", "mapping_id"],
+      "optional": ["evidence_digest", "local_ref"],
+      "status_enum": ["open", "withdrawn", "resolved"],
+      "freeze_cluster": ["subject_version_id", "映射对端版本", "沿依赖边传递的下游版本"]
+    },
+    "conclusion": {
+      "immutable": true,
+      "fields": [
+        "rule_version", "gates_met", "is_overdue", "payment_eligible",
+        "payment_amount", "details_json", "inputs_json", "basis_hash",
+        "supersedes_conclusion_id", "split_parent_conclusion_id"
+      ],
+      "change_path": "已进入付款的结论只能通过 conclusion_reversals 冲正 + 替代结论变更"
+    },
+    "conclusion_reversal": {
+      "required": ["original_conclusion_id", "reason_code", "reason"],
+      "optional": ["evidence_digest"],
+      "reason_code_enum": [
+        "late_evidence", "partial_delivery", "split", "duplicate_receipt",
+        "holiday_correction", "mapping_change", "factual_error", "other"
+      ],
+      "status_enum": ["proposed", "accepted", "rejected"],
+      "decide_role": "project_owner"
+    },
+    "settlement_batch": {
+      "required": ["batch_no"],
+      "status_enum": ["open", "closed"],
+      "close_effect": "固化 rule_version 与 cutoff_at，按截止时刻重算并纳入可付款版本"
+    }
+  },
+  "error_shape": { "error": { "code": "string", "message": "string" } },
+  "success_shape": { "data": "object | array" }
 }

@@ -1,5 +1,68 @@
 {
-  "cooperation_ref": "COOP-DEMO",
-  "side": "A",
-  "milestone_code": "M1"
+  "note": "本地演示样例，不含真实主体信息。按顺序调用即可走通一次对账闭环。",
+  "parties": [
+    { "party_code": "HOME", "side": "A", "display_name": "示例境内团队" },
+    { "party_code": "PARTNER", "side": "B", "display_name": "示例境外伙伴" }
+  ],
+  "cooperation": {
+    "cooperation_ref": "COOP-DEMO",
+    "home_party": "HOME",
+    "partner_party": "PARTNER",
+    "currency": "CNY"
+  },
+  "calendars": [
+    {
+      "calendar_code": "CN-2026",
+      "iana_timezone": "Asia/Shanghai",
+      "work_mon": 1, "work_tue": 1, "work_wed": 1, "work_thu": 1, "work_fri": 1,
+      "work_sat": 0, "work_sun": 0,
+      "valid_from_date": "2026-01-01",
+      "holidays": [
+        { "holiday_date": "2026-10-01", "name": "国庆假期" },
+        { "holiday_date": "2026-10-02", "name": "国庆假期" },
+        { "holiday_date": "2026-10-05", "name": "国庆假期" },
+        { "holiday_date": "2026-10-06", "name": "国庆假期" },
+        { "holiday_date": "2026-10-07", "name": "国庆假期" },
+        { "holiday_date": "2026-10-08", "name": "国庆假期" }
+      ]
+    },
+    {
+      "calendar_code": "DE-2026",
+      "iana_timezone": "Europe/Berlin",
+      "work_mon": 1, "work_tue": 1, "work_wed": 1, "work_thu": 1, "work_fri": 1,
+      "work_sat": 0, "work_sun": 0,
+      "valid_from_date": "2026-01-01",
+      "holidays": []
+    }
+  ],
+  "milestones": [
+    {
+      "as": "HOME",
+      "milestone_code": "M1",
+      "title": "需求规格确认",
+      "planned_date": "2026-10-01T12:00:00+08:00",
+      "amount": 120000,
+      "required_roles": ["HOME:lead", "PARTNER:lead"]
+    },
+    {
+      "as": "PARTNER",
+      "milestone_code": "M1",
+      "title": "Requirements sign-off",
+      "planned_date": "2026-10-01T12:00:00+02:00",
+      "amount": 120000,
+      "required_roles": ["HOME:lead", "PARTNER:lead"]
+    }
+  ],
+  "delivery_items": [{ "item_code": "spec-doc", "title": "需求规格说明书", "required_qty": 1 }],
+  "delivery_event": {
+    "item_code": "spec-doc",
+    "evidence_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000001",
+    "delivered_at": "2026-10-08T10:00:00+08:00"
+  },
+  "receipt": {
+    "receipt_no": "RCV-DEMO-1",
+    "evidence_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000002",
+    "signed_at": "2026-10-08T10:30:00+08:00"
+  },
+  "expectation": "境内日历下 10/01-10/08 为假日，截止顺延至 10/08 日终，未逾期；境外日历无此假日，同一完成时刻在境外口径下逾期。差异由 GET /cooperations/COOP-DEMO/versions/:vid/diff 展示。"
 }
